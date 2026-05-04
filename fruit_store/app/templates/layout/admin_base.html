@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin - Fruit Store{% endblock %}</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f4f6f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Admin Navbar - chỉ hiển thị menu admin */
+        .admin-navbar {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .admin-navbar .navbar-brand {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .admin-navbar .navbar-brand i {
+            color: #ffd700;
+            margin-right: 10px;
+        }
+
+        .admin-navbar .nav-link {
+            color: rgba(255,255,255,0.8) !important;
+            font-weight: 500;
+            padding: 8px 15px !important;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .admin-navbar .nav-link:hover {
+            color: #fff !important;
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }
+
+        .admin-navbar .nav-link.active {
+            color: #fff !important;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .admin-navbar .nav-link i {
+            margin-right: 8px;
+        }
+
+        /* User dropdown */
+        .admin-user-menu {
+            background: rgba(255,255,255,0.1);
+            border-radius: 25px;
+            padding: 5px 15px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .admin-user-menu:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .dropdown-menu {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-top: 10px;
+        }
+
+        .dropdown-item {
+            padding: 10px 20px;
+            transition: all 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            color: #28a745;
+        }
+
+        .dropdown-item.text-danger i {
+            color: #dc3545;
+        }
+
+        /* Main content */
+        .admin-content {
+            flex: 1;
+            padding: 30px 0;
+        }
+
+        /* Page header */
+        .admin-page-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .admin-page-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 1.8rem;
+        }
+
+        .admin-page-header p {
+            margin: 10px 0 0;
+            color: #6c757d;
+        }
+
+        /* Stats cards */
+        .stat-card {
+            border: none;
+            border-radius: 15px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .stat-card .fa-3x {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            opacity: 0.3;
+        }
+
+        /* Status badges */
+        .badge {
+            padding: 8px 12px;
+            font-weight: 500;
+            border-radius: 20px;
+        }
+
+        .badge.bg-warning { background-color: #ffc107 !important; color: #000; }
+        .badge.bg-info { background-color: #17a2b8 !important; color: #fff; }
+        .badge.bg-primary { background-color: #007bff !important; color: #fff; }
+        .badge.bg-success { background-color: #28a745 !important; color: #fff; }
+        .badge.bg-danger { background-color: #dc3545 !important; color: #fff; }
+        .badge.bg-secondary { background-color: #6c757d !important; color: #fff; }
+
+        /* Table */
+        .table th {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        /* Buttons */
+        .btn-sm {
+            padding: 5px 10px;
+        }
+
+        /* Footer */
+        .admin-footer {
+            background: white;
+            padding: 15px 0;
+            margin-top: auto;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-navbar .navbar-brand {
+                font-size: 1.2rem;
+            }
+            
+            .admin-page-header h2 {
+                font-size: 1.5rem;
+            }
+            
+            .stat-card h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+
+    {% block styles %}{% endblock %}
+</head>
+<body>
+
+<!-- Admin Navbar - Chỉ có menu admin -->
+<nav class="admin-navbar navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" href="/admin">
+            <i class="fas fa-apple-alt"></i>
+            Fruit Store Admin
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="adminNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_page' %}active{% endif %}" href="/admin">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_products' %}active{% endif %}" href="/admin/products">
+                        <i class="fas fa-box"></i> Quản lý sản phẩm
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin.users_page' %}active{% endif %}" href="/admin/users">
+                        <i class="fas fa-users"></i> Quản lý người dùng
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- User menu -->
+            <div class="dropdown">
+                <div class="admin-user-menu dropdown-toggle" id="adminUserDropdown" data-bs-toggle="dropdown">
+                    <i class="fas fa-user-circle me-1"></i>
+                    <span id="admin-username">Admin</span>
+                </div>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="/">
+                            <i class="fas fa-store me-2"></i>Về trang chủ
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="admin-content">
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="admin-footer text-center">
+    <div class="container">
+        <p class="mb-0 text-muted">
+            &copy; 2024 Fruit Store Admin. All rights reserved.
+        </p>
+    </div>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+// Lấy thông tin admin từ localStorage
+function loadAdminInfo() {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            document.getElementById('admin-username').textContent = user.username || 'Admin';
+            
+            // Kiểm tra quyền admin
+            if (!user.is_admin) {
+                window.location.href = '/';
+            }
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+            window.location.href = '/auth/login-page';
+        }
+    } else {
+        window.location.href = '/auth/login-page';
+    }
+}
+
+function logout() {
+    if (confirm('Bạn có chắc muốn đăng xuất?')) {
+        fetch('/auth/logout')
+        .then(response => response.json())
+        .then(data => {
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        })
+        .catch(error => {
+            console.error('Logout error:', error);
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        });
+    }
+}
+
+// Format currency
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND'
+    }).format(amount);
+}
+
+// Show notification
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+    notification.style.zIndex = '9999';
+    notification.style.minWidth = '300px';
+    notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    notification.style.animation = 'slideIn 0.3s ease';
+    
+    const icon = type === 'success' ? '<i class="fas fa-check-circle me-2"></i>' : '<i class="fas fa-exclamation-circle me-2"></i>';
+    notification.innerHTML = `
+        ${icon}
+        <span class="me-3">${message}</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Add animation style
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Load admin info khi trang load
+document.addEventListener('DOMContentLoaded', loadAdminInfo);
+</script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

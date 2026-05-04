@@ -1,0 +1,210 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<!-- Thêm meta tag để không cache -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
+<div class="container py-4">
+    <!-- Hero Section -->
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold text-success">Trái cây tươi ngon mỗi ngày</h1>
+            <p class="lead text-muted">
+                Chào mừng bạn đến với Fruit Store - cửa hàng trái cây tươi sạch hàng đầu. 
+                Chúng tôi cam kết mang đến những sản phẩm chất lượng nhất cho gia đình bạn.
+            </p>
+            <a href="/products-ui" class="btn btn-success btn-lg">
+                <i class="fas fa-shopping-basket"></i> Mua sắm ngay
+            </a>
+        </div>
+        <div class="col-lg-6">
+            <img src="https://images.unsplash.com/photo-1619566636858-adf3ef46400b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80" 
+                 alt="Fruits" class="img-fluid rounded-3 shadow">
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card text-center p-4">
+                <i class="fas fa-truck fa-3x text-success mb-3"></i>
+                <h5>Giao hàng miễn phí</h5>
+                <p class="text-muted">Cho đơn hàng từ 200.000đ</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-4">
+                <i class="fas fa-undo-alt fa-3x text-success mb-3"></i>
+                <h5>Đổi trả dễ dàng</h5>
+                <p class="text-muted">Trong vòng 24h</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-4">
+                <i class="fas fa-leaf fa-3x text-success mb-3"></i>
+                <h5>Tươi ngon mỗi ngày</h5>
+                <p class="text-muted">Nhập khẩu trực tiếp</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Products -->
+    <h2 class="text-center mb-4">Sản phẩm nổi bật</h2>
+    <div class="row row-cols-1 row-cols-md-4 g-4" id="featured-products">
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Đang tải sản phẩm...</p>
+        </div>
+    </div>
+
+    <!-- Newsletter Section -->
+    <div class="row mt-5">
+        <div class="col-md-8 mx-auto">
+            <div class="card bg-success text-white p-5 text-center">
+                <h3>Đăng ký nhận tin</h3>
+                <p>Nhận thông tin về sản phẩm mới và ưu đãi đặc biệt</p>
+                <form class="row g-3 justify-content-center" id="newsletterForm">
+                    <div class="col-md-6">
+                        <input type="email" class="form-control" placeholder="Email của bạn" required>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-warning w-100">Đăng ký</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Thêm timestamp để tránh cache
+const timestamp = new Date().getTime();
+
+// Load featured products
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 Trang chủ loaded - timestamp:', timestamp);
+    loadFeaturedProducts();
+});
+
+async function loadFeaturedProducts() {
+    console.log('🔄 Đang tải sản phẩm nổi bật...');
+    
+    try {
+        // SỬA: dùng /api/products
+        const url = '/api/products';
+        console.log('📡 Gọi API:', url);
+        
+        const response = await fetch(url, {
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+        
+        console.log('📥 Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ Dữ liệu nhận được:', data);
+        
+        const featured = data.slice(0, 4);
+        const container = document.getElementById('featured-products');
+        
+        if (featured.length === 0) {
+            container.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">Chưa có sản phẩm</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        featured.forEach(p => {
+            html += `
+            <div class="col">
+                <div class="card h-100">
+                    <img src="${p.image || 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b'}" 
+                         class="card-img-top" alt="${p.name}"
+                         style="height: 200px; object-fit: cover;"
+                         onerror="this.src='https://images.unsplash.com/photo-1619566636858-adf3ef46400b'">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">${p.name}</h5>
+                        <p class="card-text text-success fw-bold">${formatNumber(p.price)} VNĐ</p>
+                        <button class="btn btn-outline-success btn-sm" onclick="addToCartFromHome(${p.id})">
+                            <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                        </button>
+                        <a href="/products-ui" class="btn btn-outline-primary btn-sm mt-2">
+                            Xem chi tiết
+                        </a>
+                    </div>
+                </div>
+            </div>
+            `;
+        });
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('❌ Lỗi:', error);
+        document.getElementById('featured-products').innerHTML = `
+            <div class="col-12 text-center py-5">
+                <p class="text-danger">❌ Không thể tải sản phẩm</p>
+                <button class="btn btn-success" onclick="loadFeaturedProducts()">
+                    <i class="fas fa-sync-alt"></i> Thử lại
+                </button>
+            </div>
+        `;
+    }
+}
+
+function formatNumber(num) {
+    return new Intl.NumberFormat('vi-VN').format(num);
+}
+
+async function addToCartFromHome(productId) {
+    const user = localStorage.getItem('user');
+    if (!user) {
+        if (confirm('Vui lòng đăng nhập để thêm vào giỏ hàng.')) {
+            window.location.href = '/auth/login-page';
+        }
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/cart/add', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ product_id: productId })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✅ ' + data.message);
+            if (window.updateCartCount) {
+                window.updateCartCount();
+            }
+        } else {
+            alert('❌ ' + data.message);
+        }
+    } catch (error) {
+        alert('❌ Lỗi kết nối');
+    }
+}
+
+// Xử lý newsletter
+document.getElementById('newsletterForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const email = this.querySelector('input[type="email"]').value;
+    alert(`Cảm ơn bạn! Email ${email} đã đăng ký thành công.`);
+    this.reset();
+});
+</script>
+{% endblock %}

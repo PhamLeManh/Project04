@@ -1,0 +1,423 @@
+{% extends "layout/admin_base.html" %}
+
+{% block title %}Quản lý người dùng - Fruit Store Admin{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="admin-page-header">
+    <h2>
+        <i class="fas fa-users-cog me-2 text-success"></i>
+        Quản lý người dùng
+    </h2>
+    <p>Theo dõi, chỉnh sửa và quản lý tài khoản khách hàng & admin</p>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Tìm kiếm</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Tên, email, số điện thoại...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Vai trò</label>
+                <select id="roleFilter" class="form-select">
+                    <option value="">Tất cả vai trò</option>
+                    <option value="customer">Khách hàng</option>
+                    <option value="admin">Admin</option>
+                    <option value="staff">Nhân viên (nếu có)</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Trạng thái</label>
+                <select id="statusFilter" class="form-select">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="active">Hoạt động</option>
+                    <option value="inactive">Khóa</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-success w-100" onclick="applyFilters()">
+                    <i class="fas fa-filter me-2"></i>Lọc
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-users me-2 text-success"></i>
+            Danh sách người dùng
+        </h5>
+        <button class="btn btn-outline-success btn-sm" onclick="exportUsers()">
+            <i class="fas fa-download me-1"></i> Xuất Excel
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="usersTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên</th>
+                        <th>Email</th>
+                        <th>SĐT</th>
+                        <th>Vai trò</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày đăng ký</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="usersBody">
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Đang tải danh sách người dùng...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer bg-white">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-0" id="pagination">
+                <!-- Phân trang sẽ được render động -->
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Modal xem / chỉnh sửa chi tiết user -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModalLabel">Chi tiết người dùng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="userModalBody">
+                <!-- Nội dung sẽ được load động -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-success" id="saveUserBtn">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Biến toàn cục
+let currentPage = 1;
+const pageSize = 10;
+let allUsers = [];
+
+// Load dữ liệu khi trang mở
+document.addEventListener('DOMContentLoaded', loadUsers);
+
+function loadUsers() {
+    fetch('/api/admin/users')
+    .then(res => {
+        if (!res.ok) throw new Error('Lỗi tải dữ liệu');
+        return res.json();
+    })
+    .then(data => {
+        allUsers = Array.isArray(data) ? data : [];
+        renderUsers(allUsers);
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        document.getElementById('usersBody').innerHTML = `
+            <tr><td colspan="8" class="text-center text-danger py-5">
+                Không thể tải danh sách người dùng. Vui lòng thử lại.
+            </td></tr>`;
+    });
+}
+
+function renderUsers(users) {
+    const tbody = document.getElementById('usersBody');
+    tbody.innerHTML = '';
+
+    if (users.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-5">
+                    <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Không tìm thấy người dùng nào</p>
+                </td>
+            </tr>`;
+        return;
+    }
+
+    // Phân trang
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    const paginatedUsers = users.slice(start, end);
+
+    let html = '';
+    paginatedUsers.forEach(user => {
+        const statusBadge = user.is_active 
+            ? '<span class="badge bg-success">Hoạt động</span>' 
+            : '<span class="badge bg-danger">Khóa</span>';
+
+        const roleBadge = user.role === 'admin'
+            ? '<span class="badge bg-primary">Admin</span>'
+            : user.role === 'staff'
+                ? '<span class="badge bg-info">Nhân viên</span>'
+                : '<span class="badge bg-secondary">Khách hàng</span>';
+
+        html += `
+        <tr>
+            <td><strong>#${user.id}</strong></td>
+            <td>${user.full_name || user.username || 'N/A'}</td>
+            <td>${user.email || 'N/A'}</td>
+            <td>${user.phone || 'Chưa cập nhật'}</td>
+            <td>${roleBadge}</td>
+            <td>${statusBadge}</td>
+            <td>${user.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN') : 'N/A'}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary me-1" 
+                        onclick="viewUserDetail(${user.id})">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-warning me-1" 
+                        onclick="toggleUserStatus(${user.id}, ${user.is_active})">
+                    <i class="fas fa-${user.is_active ? 'lock' : 'unlock'}"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" 
+                        onclick="deleteUser(${user.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
+
+    // Render phân trang
+    renderPagination(users.length);
+}
+
+function renderPagination(totalItems) {
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    let html = '';
+
+    // Previous
+    html += `
+    <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Trước</a>
+    </li>`;
+
+    // Pages
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+            html += `
+            <li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+            </li>`;
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+    }
+
+    // Next
+    html += `
+    <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Sau</a>
+    </li>`;
+
+    pagination.innerHTML = html;
+}
+
+function changePage(page) {
+    if (page < 1 || page > Math.ceil(allUsers.length / pageSize)) return;
+    currentPage = page;
+    renderUsers(allUsers);
+}
+
+function applyFilters() {
+    const search = document.getElementById('searchInput').value.toLowerCase().trim();
+    const role = document.getElementById('roleFilter').value;
+    const status = document.getElementById('statusFilter').value;
+
+    let filtered = allUsers;
+
+    if (search) {
+        filtered = filtered.filter(u => 
+            (u.full_name?.toLowerCase().includes(search) ||
+             u.username?.toLowerCase().includes(search) ||
+             u.email?.toLowerCase().includes(search) ||
+             u.phone?.includes(search))
+        );
+    }
+
+    if (role) {
+        filtered = filtered.filter(u => u.role === role);
+    }
+
+    if (status) {
+        const isActive = status === 'active';
+        filtered = filtered.filter(u => u.is_active === isActive);
+    }
+
+    currentPage = 1;
+    renderUsers(filtered);
+}
+
+function viewUserDetail(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return alert('Không tìm thấy người dùng');
+
+    const modalBody = document.getElementById('userModalBody');
+    modalBody.innerHTML = `
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">ID</label>
+                <p class="form-control-static">#${user.id}</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Email</label>
+                <p class="form-control-static">${user.email || 'Chưa cập nhật'}</p>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Tên đầy đủ</label>
+                <input type="text" class="form-control" id="editFullName" value="${user.full_name || ''}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Số điện thoại</label>
+                <input type="text" class="form-control" id="editPhone" value="${user.phone || ''}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Vai trò</label>
+                <select class="form-select" id="editRole">
+                    <option value="customer" ${user.role === 'customer' ? 'selected' : ''}>Khách hàng</option>
+                    <option value="staff" ${user.role === 'staff' ? 'selected' : ''}>Nhân viên</option>
+                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Trạng thái</label>
+                <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" id="editActive" ${user.is_active ? 'checked' : ''}>
+                    <label class="form-check-label" for="editActive">
+                        ${user.is_active ? 'Hoạt động' : 'Bị khóa'}
+                    </label>
+                </div>
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-bold">Ngày đăng ký</label>
+                <p class="form-control-static">${user.created_at ? new Date(user.created_at).toLocaleString('vi-VN') : 'N/A'}</p>
+            </div>
+        </div>
+    `;
+
+    // Gắn sự kiện cho nút lưu
+    document.getElementById('saveUserBtn').onclick = () => saveUserChanges(userId);
+
+    const modal = new bootstrap.Modal(document.getElementById('userModal'));
+    modal.show();
+}
+
+function saveUserChanges(userId) {
+    const data = {
+        full_name: document.getElementById('editFullName').value.trim(),
+        phone: document.getElementById('editPhone').value.trim(),
+        role: document.getElementById('editRole').value,
+        is_active: document.getElementById('editActive').checked
+    };
+
+    fetch(`/api/admin/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            alert('Cập nhật thành công!');
+            bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+            loadUsers(); // reload toàn bộ
+        } else {
+            alert(result.message || 'Cập nhật thất bại');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Có lỗi xảy ra khi lưu');
+    });
+}
+
+function toggleUserStatus(userId, currentStatus) {
+    const action = currentStatus ? 'Khóa' : 'Mở khóa';
+    if (!confirm(`Bạn có chắc muốn ${action.toLowerCase()} tài khoản này?`)) return;
+
+    fetch(`/api/admin/users/${userId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !currentStatus })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            alert(result.message);
+            loadUsers();
+        } else {
+            alert(result.message || 'Thao tác thất bại');
+        }
+    })
+    .catch(() => alert('Lỗi kết nối server'));
+}
+
+function deleteUser(userId) {
+    if (!confirm('XÓA người dùng này? Hành động KHÔNG THỂ hoàn tác!')) return;
+
+    fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE'
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            alert('Đã xóa người dùng');
+            loadUsers();
+        } else {
+            alert(result.message || 'Không thể xóa');
+        }
+    })
+    .catch(() => alert('Lỗi khi xóa người dùng'));
+}
+
+function exportUsers() {
+    alert('Tính năng xuất Excel đang được phát triển...');
+    // TODO: implement CSV/Excel export
+}
+
+// Tìm kiếm realtime khi gõ
+document.getElementById('searchInput')?.addEventListener('input', applyFilters);
+</script>
+
+<style>
+/* Có thể tái sử dụng style từ dashboard hoặc thêm mới */
+.table th, .table td {
+    vertical-align: middle;
+}
+.badge {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}

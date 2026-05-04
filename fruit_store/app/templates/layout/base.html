@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Fruit Store - Cửa hàng trái cây tươi{% endblock %}</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .navbar-brand i {
+            margin-right: 8px;
+            color: #ffd700;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+            color: #ffd700 !important;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
+        }
+
+        .card:hover { 
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .card-img-top {
+            height: 200px;
+            object-fit: cover;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-outline-success {
+            border-radius: 25px;
+            padding: 8px 20px;
+            transition: all 0.3s;
+        }
+
+        .btn-outline-success:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-warning {
+            border-radius: 25px;
+            padding: 8px 20px;
+            transition: all 0.3s;
+        }
+
+        .btn-warning:hover {
+            transform: scale(1.05);
+        }
+
+        .badge-cart {
+            position: relative;
+            top: -10px;
+            right: 5px;
+            font-size: 0.7rem;
+            padding: 4px 6px;
+            border-radius: 50%;
+            background-color: #ffc107;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .dropdown-menu {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .dropdown-item {
+            padding: 10px 20px;
+            transition: all 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            color: #28a745;
+        }
+
+        footer {
+            background: #343a40;
+            color: white;
+            padding: 20px 0;
+            margin-top: auto;
+        }
+
+        footer a {
+            color: #ffd700;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        footer a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .alert-notification {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border-radius: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,.1);
+            border-radius: 50%;
+            border-top-color: #28a745;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .price-tag {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .stock-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .stock-badge.in-stock {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .stock-badge.out-of-stock {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+            
+            .page-header {
+                padding: 20px 0;
+            }
+            
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+
+    {% block styles %}{% endblock %}
+</head>
+<body>
+
+<!-- Header -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-success px-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-apple-alt"></i> 
+            <span class="d-none d-sm-inline">Fruit Store</span>
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-home"></i> 
+                        <span class="d-none d-md-inline">Trang chủ</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/products-ui">
+                        <i class="fas fa-list"></i> 
+                        <span class="d-none d-md-inline">Sản phẩm</span>
+                    </a>
+                </li>
+                <li class="nav-item position-relative">
+                    <a class="nav-link" href="/cart-ui">
+                        <i class="fas fa-shopping-cart"></i> 
+                        <span class="d-none d-md-inline">Giỏ hàng</span>
+                        <span class="badge-cart" id="cart-count">0</span>
+                    </a>
+                </li>
+                <!-- Admin links - sẽ hiển thị bằng JavaScript -->
+                <li class="nav-item" id="admin-link" style="display: none;">
+                    <a class="nav-link" href="/admin">
+                        <i class="fas fa-tachometer-alt"></i> 
+                        <span class="d-none d-md-inline">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item" id="admin-products-link" style="display: none;">
+                    <a class="nav-link" href="/admin/products">
+                        <i class="fas fa-cog"></i> 
+                        <span class="d-none d-md-inline">Quản lý SP</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="d-flex align-items-center" id="user-section">
+                <!-- Sẽ được cập nhật bằng JavaScript -->
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="flex-grow-1">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Footer -->
+<footer class="text-center text-lg-start">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-3 mb-md-0">
+                <h5><i class="fas fa-apple-alt me-2"></i>Fruit Store</h5>
+                <p class="small">Cửa hàng trái cây tươi ngon, chất lượng cao. Cam kết mang đến sản phẩm tốt nhất cho gia đình bạn.</p>
+            </div>
+            <div class="col-md-4 mb-3 mb-md-0">
+                <h5>Liên kết nhanh</h5>
+                <ul class="list-unstyled">
+                    <li><a href="/" class="text-decoration-none"><i class="fas fa-angle-right me-2"></i>Trang chủ</a></li>
+                    <li><a href="/products-ui" class="text-decoration-none"><i class="fas fa-angle-right me-2"></i>Sản phẩm</a></li>
+                    <li><a href="/cart-ui" class="text-decoration-none"><i class="fas fa-angle-right me-2"></i>Giỏ hàng</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h5>Thông tin liên hệ</h5>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-map-marker-alt me-2"></i>123 Đường ABC, Quận XYZ, TP.HCM</li>
+                    <li><i class="fas fa-phone me-2"></i>0123 456 789</li>
+                    <li><i class="fas fa-envelope me-2"></i>support@fruitstore.com</li>
+                </ul>
+            </div>
+        </div>
+        <hr class="my-3 bg-light">
+        <div class="text-center small">
+            &copy; 2024 Fruit Store. All rights reserved.
+        </div>
+    </div>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+// Kiểm tra trạng thái đăng nhập và role
+function checkAuth() {
+    const userStr = localStorage.getItem('user');
+    const userSection = document.getElementById('user-section');
+    
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            
+            // Hiển thị thông tin user với dropdown
+            userSection.innerHTML = `
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" 
+                            id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle me-1"></i>
+                        ${user.username || user.email || 'User'}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Thông tin</a></li>
+                        <li><a class="dropdown-item" href="/cart-ui"><i class="fas fa-shopping-cart me-2"></i>Giỏ hàng</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                        </a></li>
+                    </ul>
+                </div>
+            `;
+            
+            // Hiển thị link admin nếu là admin
+            if (user.is_admin) {
+                document.getElementById('admin-link').style.display = 'block';
+                document.getElementById('admin-products-link').style.display = 'block';
+            }
+            
+            // Cập nhật số lượng giỏ hàng
+            updateCartCount();
+            
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+            localStorage.removeItem('user');
+            showDefaultUserSection();
+        }
+    } else {
+        showDefaultUserSection();
+    }
+}
+
+function showDefaultUserSection() {
+    const userSection = document.getElementById('user-section');
+    userSection.innerHTML = `
+        <a href="/auth/login-page" class="btn btn-outline-light me-2">
+            <i class="fas fa-sign-in-alt"></i> 
+            <span class="d-none d-sm-inline">Đăng nhập</span>
+        </a>
+        <a href="/auth/register-page" class="btn btn-warning">
+            <i class="fas fa-user-plus"></i> 
+            <span class="d-none d-sm-inline">Đăng ký</span>
+        </a>
+    `;
+    document.getElementById('cart-count').textContent = '0';
+}
+
+function logout() {
+    // Hiển thị loading
+    showNotification('Đang đăng xuất...', 'info');
+    
+    fetch('/auth/logout')
+    .then(response => response.json())
+    .then(data => {
+        localStorage.removeItem('user');
+        // Cập nhật lại giao diện
+        checkAuth();
+        // Ẩn menu admin
+        document.getElementById('admin-link').style.display = 'none';
+        document.getElementById('admin-products-link').style.display = 'none';
+        // Hiển thị thông báo
+        showNotification('Đăng xuất thành công!', 'success');
+        // Chuyển về trang chủ nếu đang ở trang admin
+        if (window.location.pathname.startsWith('/admin')) {
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1500);
+        }
+    })
+    .catch(error => {
+        console.error('Logout error:', error);
+        // Vẫn xóa localStorage nếu có lỗi
+        localStorage.removeItem('user');
+        checkAuth();
+        showNotification('Có lỗi xảy ra khi đăng xuất', 'error');
+    });
+}
+
+function updateCartCount() {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+        document.getElementById('cart-count').textContent = '0';
+        return;
+    }
+    
+    fetch('/api/cart')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to fetch cart');
+        }
+        return response.json();
+    })
+    .then(data => {
+        const count = data.items ? data.items.length : 0;
+        document.getElementById('cart-count').textContent = count;
+    })
+    .catch(error => {
+        console.error('Error updating cart count:', error);
+        document.getElementById('cart-count').textContent = '0';
+    });
+}
+
+function showNotification(message, type = 'success') {
+    // Xóa notification cũ nếu có
+    const oldNotification = document.querySelector('.alert-notification');
+    if (oldNotification) {
+        oldNotification.remove();
+    }
+    
+    // Tạo notification mới
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} alert-dismissible fade show alert-notification position-fixed top-0 end-0 m-3`;
+    notification.style.zIndex = '9999';
+    notification.style.minWidth = '300px';
+    notification.style.maxWidth = '400px';
+    notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    
+    // Icon theo loại thông báo
+    let icon = '';
+    if (type === 'success') icon = '<i class="fas fa-check-circle me-2"></i>';
+    else if (type === 'error') icon = '<i class="fas fa-exclamation-circle me-2"></i>';
+    else icon = '<i class="fas fa-info-circle me-2"></i>';
+    
+    notification.innerHTML = `
+        ${icon}
+        <span class="me-3">${message}</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Tự động ẩn sau 3 giây
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Format số tiền
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND'
+    }).format(amount);
+}
+
+// Kiểm tra và xử lý lỗi response
+async function handleResponse(response) {
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || 'Có lỗi xảy ra');
+    }
+    return response.json();
+}
+
+// Debounce function để tránh gọi API quá nhiều
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Kiểm tra auth khi trang load
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuth();
+    
+    // Cập nhật cart count mỗi 30 giây nếu đang ở trang giỏ hàng
+    if (window.location.pathname === '/cart-ui') {
+        setInterval(updateCartCount, 30000);
+    }
+});
+
+// Xử lý khi click vào các link cần đăng nhập
+document.addEventListener('click', function(e) {
+    const cartLink = e.target.closest('a[href="/cart-ui"]');
+    if (cartLink) {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            e.preventDefault();
+            if (confirm('Vui lòng đăng nhập để xem giỏ hàng. Bạn có muốn đăng nhập không?')) {
+                window.location.href = '/auth/login-page';
+            }
+        }
+    }
+});
+</script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

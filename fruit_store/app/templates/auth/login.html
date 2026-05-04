@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Fruit Store</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .login-header h2 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .login-header i {
+            font-size: 60px;
+            color: #28a745;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        .form-control {
+            border-radius: 25px;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+        .form-control:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+            outline: none;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 8px;
+            margin-left: 5px;
+        }
+        .btn-login {
+            background: #28a745;
+            color: white;
+            border-radius: 25px;
+            padding: 12px;
+            font-weight: 600;
+            border: none;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .btn-login:hover:not(:disabled) {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .alert {
+            border-radius: 25px;
+            margin-top: 20px;
+            padding: 15px 20px;
+            border: none;
+            animation: slideIn 0.3s ease;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .register-link {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .register-link a {
+            color: #28a745;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .register-link a:hover {
+            color: #218838;
+            text-decoration: underline;
+        }
+        .back-home {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 25px;
+        }
+        .back-home:hover {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            transform: translateX(-5px);
+        }
+        .debug-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 12px;
+            border: 1px solid #dee2e6;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        .debug-panel.show {
+            display: block;
+        }
+        .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .debug-content {
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .input-group {
+            position: relative;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #999;
+            z-index: 10;
+        }
+        .toggle-password:hover {
+            color: #28a745;
+        }
+        .spinner-border {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <a href="/" class="back-home">
+        <i class="fas fa-arrow-left"></i> Về trang chủ
+    </a>
+
+    <div class="login-header">
+        <i class="fas fa-apple-alt"></i>
+        <h2>Đăng nhập</h2>
+        <p class="text-muted">Chào mừng bạn trở lại!</p>
+    </div>
+
+    <!-- Message Area -->
+    <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+    <div id="success-message" class="alert alert-success" style="display: none;"></div>
+
+    <!-- Login Form -->
+    <form id="loginForm">
+        <div class="mb-3">
+            <label for="email" class="form-label">
+                <i class="fas fa-envelope me-2"></i>Email
+            </label>
+            <input type="email" class="form-control" id="email" name="email" 
+                   placeholder="Nhập email của bạn" required 
+                   value="admin@gmail.com"> <!-- Giá trị mẫu để test -->
+        </div>
+        
+        <div class="mb-3">
+            <label for="password" class="form-label">
+                <i class="fas fa-lock me-2"></i>Mật khẩu
+            </label>
+            <div class="input-group">
+                <input type="password" class="form-control" id="password" name="password" 
+                       placeholder="Nhập mật khẩu" required 
+                       value="admin123"> <!-- Giá trị mẫu để test -->
+                <span class="toggle-password" onclick="togglePassword()">
+                    <i class="fas fa-eye" id="toggleIcon"></i>
+                </span>
+            </div>
+        </div>
+        
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="remember">
+            <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
+        </div>
+        
+        <button type="submit" class="btn-login" id="submitBtn">
+            <span id="btnText"><i class="fas fa-sign-in-alt me-2"></i>Đăng nhập</span>
+            <span id="btnSpinner" style="display: none;">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Đang xử lý...
+            </span>
+        </button>
+    </form>
+
+    <!-- Debug Panel -->
+    <div class="debug-panel" id="debugPanel">
+        <div class="debug-header" onclick="toggleDebug()">
+            <strong><i class="fas fa-bug me-2"></i>Debug Console</strong>
+            <i class="fas fa-chevron-down" id="debugIcon"></i>
+        </div>
+        <div class="debug-content" id="debugContent">
+            <div style="color: #666;">Chưa có dữ liệu debug...</div>
+        </div>
+    </div>
+
+    <div class="register-link">
+        <p>Chưa có tài khoản? <a href="/auth/register-page">Đăng ký ngay</a></p>
+    </div>
+</div>
+
+<!-- Quick Test Buttons -->
+<div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+    <button class="btn btn-sm btn-secondary me-2" onclick="setAdminCredentials()" title="Điền thông tin admin">
+        <i class="fas fa-user-shield"></i> Admin
+    </button>
+    <button class="btn btn-sm btn-info" onclick="setUserCredentials()" title="Điền thông tin user">
+        <i class="fas fa-user"></i> User
+    </button>
+</div>
+
+<script>
+// Debug variables
+let debugLogs = [];
+
+// Hàm ghi log debug
+function addDebugLog(type, data) {
+    const timestamp = new Date().toLocaleTimeString();
+    debugLogs.push({ timestamp, type, data });
+    updateDebugPanel();
+}
+
+// Cập nhật panel debug
+function updateDebugPanel() {
+    const debugContent = document.getElementById('debugContent');
+    let html = '';
+    
+    debugLogs.slice(-10).forEach(log => {
+        const color = log.type === 'error' ? '#dc3545' : 
+                     log.type === 'success' ? '#28a745' : 
+                     log.type === 'request' ? '#007bff' : '#6c757d';
+        
+        html += `<div style="border-bottom: 1px solid #eee; padding: 5px 0;">
+            <small style="color: #999;">[${log.timestamp}]</small>
+            <span style="color: ${color}; margin-left: 5px;">${log.type}:</span>
+            <pre style="margin: 2px 0 0 15px; font-size: 11px;">${JSON.stringify(log.data, null, 2)}</pre>
+        </div>`;
+    });
+    
+    if (html) {
+        debugContent.innerHTML = html;
+    }
+}
+
+// Hiển thị/ẩn debug panel
+function toggleDebug() {
+    const panel = document.getElementById('debugPanel');
+    const icon = document.getElementById('debugIcon');
+    
+    panel.classList.toggle('show');
+    if (panel.classList.contains('show')) {
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+    } else {
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+    }
+}
+
+// Hiển thị/ẩn mật khẩu
+function togglePassword() {
+    const password = document.getElementById('password');
+    const icon = document.getElementById('toggleIcon');
+    
+    if (password.type === 'password') {
+        password.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        password.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Điền thông tin admin để test
+function setAdminCredentials() {
+    document.getElementById('email').value = 'admin@gmail.com';
+    document.getElementById('password').value = 'admin123';
+    addDebugLog('info', { action: 'Auto-filled admin credentials' });
+}
+
+// Điền thông tin user để test
+function setUserCredentials() {
+    document.getElementById('email').value = 'user@gmail.com';
+    document.getElementById('password').value = 'user123';
+    addDebugLog('info', { action: 'Auto-filled user credentials' });
+}
+
+// Xử lý form đăng nhập
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Reset messages
+    document.getElementById('error-message').style.display = 'none';
+    document.getElementById('success-message').style.display = 'none';
+    
+    // Show loading
+    document.getElementById('btnText').style.display = 'none';
+    document.getElementById('btnSpinner').style.display = 'inline-block';
+    document.getElementById('submitBtn').disabled = true;
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const remember = document.getElementById('remember').checked;
+    
+    // Log request
+    addDebugLog('request', { 
+        email, 
+        password: '***hidden***', 
+        remember,
+        url: '/auth/login',
+        method: 'POST'
+    });
+    
+    try {
+        console.log('Sending login request...');
+        
+        const response = await fetch('/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        // Log response
+        addDebugLog(response.ok ? 'success' : 'error', {
+            status: response.status,
+            ok: response.ok,
+            data: data
+        });
+        
+        if (response.ok) {
+            // Lưu thông tin user
+            const userData = {
+                email: email,
+                username: data.username || email.split('@')[0],
+                role: data.role,
+                is_admin: data.is_admin
+            };
+            
+            console.log('Saving user data:', userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+            
+            // Hiển thị success message
+            document.getElementById('success-message').textContent = data.message;
+            document.getElementById('success-message').style.display = 'block';
+            
+            // Kiểm tra role
+            if (data.is_admin) {
+                console.log('Admin login detected - will redirect to admin panel');
+                setTimeout(() => {
+                    window.location.href = '/admin';
+                }, 1500);
+            } else {
+                console.log('User login detected - will redirect to home');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+            }
+        } else {
+            // Hiển thị error message
+            document.getElementById('error-message').textContent = data.message || 'Đăng nhập thất bại';
+            document.getElementById('error-message').style.display = 'block';
+            
+            // Hide loading
+            document.getElementById('btnText').style.display = 'inline-block';
+            document.getElementById('btnSpinner').style.display = 'none';
+            document.getElementById('submitBtn').disabled = false;
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        
+        addDebugLog('error', {
+            message: error.message,
+            stack: error.stack
+        });
+        
+        document.getElementById('error-message').textContent = 'Có lỗi xảy ra: ' + error.message;
+        document.getElementById('error-message').style.display = 'block';
+        
+        // Hide loading
+        document.getElementById('btnText').style.display = 'inline-block';
+        document.getElementById('btnSpinner').style.display = 'none';
+        document.getElementById('submitBtn').disabled = false;
+    }
+});
+
+// Kiểm tra trạng thái đăng nhập hiện tại
+window.addEventListener('load', function() {
+    const user = localStorage.getItem('user');
+    if (user) {
+        try {
+            const userData = JSON.parse(user);
+            addDebugLog('info', { 
+                message: 'Already logged in', 
+                user: userData 
+            });
+            console.log('Current logged in user:', userData);
+        } catch (e) {
+            console.error('Error parsing stored user:', e);
+        }
+    }
+    
+    // Hiển thị debug panel mặc định
+    setTimeout(() => {
+        document.getElementById('debugPanel').classList.add('show');
+    }, 1000);
+});
+
+// Test kết nối API
+async function testAPIConnection() {
+    try {
+        const response = await fetch('/auth/test');
+        const data = await response.json();
+        addDebugLog('info', { api_test: data });
+    } catch (error) {
+        addDebugLog('error', { api_test: error.message });
+    }
+}
+
+// Gọi test API
+testAPIConnection();
+</script>
+
+<!-- Thêm route test trong auth.py nếu chưa có -->
+<!-- Thêm tạm route này để test -->
+<script>
+// Thêm route test tạm thời
+if (!window.testRouteAdded) {
+    window.testRouteAdded = true;
+    
+    // Kiểm tra xem server có đang chạy không
+    fetch('/')
+    .then(() => {
+        addDebugLog('success', { message: 'Server is running' });
+    })
+    .catch(error => {
+        addDebugLog('error', { message: 'Cannot connect to server', error: error.message });
+    });
+}
+</script>
+
+</body>
+</html>
