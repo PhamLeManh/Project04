@@ -37,8 +37,9 @@ def get_users():
         "email": u.email,
         "phone": u.phone or 'Chưa cập nhật',
         "role": u.role,
+        "is_active": getattr(u, 'is_active', True),  # 🔥 THÊM DÒNG NÀY
         "created_at": u.created_at.strftime('%d/%m/%Y %H:%M') if u.created_at else None
-    } for u in users])
+    } for u in users])  # 🔥 SỬA DÒNG NÀY (thêm is_active)
 
 
 # ======================
@@ -294,6 +295,85 @@ def update_order_status(order_id):
         return jsonify({
             "success": True,
             "message": f"Đã cập nhật trạng thái thành {get_status_text(new_status)}"
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# ======================
+# USER MANAGEMENT (THÊM MỚI)
+# ======================
+
+@admin_bp.route('/admin/users/<int:user_id>', methods=['PUT'])
+@login_required
+def update_user(user_id):
+    if not check_admin():
+        return jsonify({"error": "Không có quyền"}), 403
+
+    try:
+        user = User.query.get(user_id)
+
+        if not user:
+            return jsonify({"error": "Không tìm thấy người dùng"}), 404
+
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({"error": "Không nhận được dữ liệu"}), 400
+
+        # Cập nhật các trường
+        if 'full_name' in data:
+            user.full_name = data['full_name']
+        if 'phone' in data:
+            user.phone = data['phone']
+        if 'role' in data:
+            role_value = data['role']
+            if role_value == 'customer':
+                role_value = 'user'
+            if role_value in ['user', 'admin']:
+                user.role = role_value
+        if 'is_active' in data:
+            user.is_active = data['is_active']
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": f"Đã cập nhật người dùng {user.username}"
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@admin_bp.route('/admin/users/<int:user_id>/status', methods=['PATCH'])
+@login_required
+def update_user_status(user_id):
+    if not check_admin():
+        return jsonify({"error": "Không có quyền"}), 403
+
+    try:
+        user = User.query.get(user_id)
+
+        if not user:
+            return jsonify({"error": "Không tìm thấy người dùng"}), 404
+
+        data = request.get_json()
+        is_active = data.get('is_active')
+
+        if is_active is None:
+            return jsonify({"error": "Thiếu trạng thái is_active"}), 400
+
+        user.is_active = is_active
+        db.session.commit()
+
+        status_text = "mở khóa" if is_active else "khóa"
+        return jsonify({
+            "success": True,
+            "message": f"Đã {status_text} tài khoản {user.username}"
         })
 
     except Exception as e:

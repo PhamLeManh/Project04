@@ -17,6 +17,7 @@ class User(db.Model, UserMixin):
     phone = db.Column(db.String(20))
     address = db.Column(db.Text)
     role = db.Column(db.Enum('user', 'admin'), default='user')
+    is_active = db.Column(db.Boolean, default=True)  # 🔥 THÊM DÒNG NÀY
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # 🔗 RELATIONSHIPS - GIỮ NGUYÊN NHƯ CŨ
