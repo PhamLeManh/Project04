@@ -80,21 +80,409 @@
     </div>
 </div>
 
-<script>
-// Thêm timestamp để tránh cache
-const timestamp = new Date().getTime();
+<!-- Chat AI Box - Chỉ hiển thị khi đã đăng nhập -->
+<div class="chat-ai-container" id="chatContainer" style="display: none;">
+    <button class="chat-toggle-btn" id="chatToggleBtn">
+        <i class="fas fa-robot"></i>
+        <span class="chat-status"></span>
+    </button>
+    
+    <div class="chat-window" id="chatWindow" style="display: none;">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <i class="fas fa-robot text-success"></i>
+                <h6 class="mb-0 ms-2">AI Assistant - Fruit Store</h6>
+            </div>
+            <button class="chat-close-btn" id="chatCloseBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                <div class="message-content">
+                    👋 Xin chào! Tôi là trợ lý AI của Fruit Store. 
+                    Tôi có thể giúp gì cho bạn hôm nay?
+                </div>
+                <div class="message-time">Just now</div>
+            </div>
+        </div>
+        
+        <div class="chat-typing" id="chatTyping" style="display: none;">
+            <div class="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span class="typing-text">AI đang trả lời...</span>
+            </div>
+        </div>
+        
+        <div class="chat-input-area">
+            <textarea 
+                id="chatInput" 
+                placeholder="Nhập tin nhắn của bạn..." 
+                rows="1"
+                onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }"
+            ></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
 
-// Load featured products
+<!-- Login Required Modal -->
+<div class="modal fade" id="loginRequiredModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-lock"></i> Yêu cầu đăng nhập
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-robot fa-4x text-success mb-3"></i>
+                <h5>Vui lòng đăng nhập để sử dụng tính năng Chat AI</h5>
+                <p class="text-muted">Đăng nhập để được tư vấn và hỗ trợ tốt nhất!</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <a href="/auth/login-page" class="btn btn-success">
+                    <i class="fas fa-sign-in-alt"></i> Đăng nhập ngay
+                </a>
+                <a href="/auth/register-page" class="btn btn-outline-success">
+                    <i class="fas fa-user-plus"></i> Đăng ký tài khoản
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Chat AI Styles */
+.chat-ai-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.chat-toggle-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.chat-toggle-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+.chat-toggle-btn i {
+    font-size: 28px;
+    color: white;
+}
+
+.chat-status {
+    position: absolute;
+    bottom: 2px;
+    right: 5px;
+    width: 14px;
+    height: 14px;
+    background-color: #00ff00;
+    border-radius: 50%;
+    border: 2px solid white;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 255, 0, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 0, 0);
+    }
+}
+
+.chat-window {
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    width: 380px;
+    height: 500px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideInUp 0.3s ease;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header-info {
+    display: flex;
+    align-items: center;
+}
+
+.chat-header-info i {
+    font-size: 24px;
+}
+
+.chat-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 5px;
+    transition: all 0.2s;
+}
+
+.chat-close-btn:hover {
+    transform: rotate(90deg);
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    background-color: #f8f9fa;
+}
+
+.message {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.user-message {
+    align-items: flex-end;
+}
+
+.bot-message {
+    align-items: flex-start;
+}
+
+.message-content {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 18px;
+    word-wrap: break-word;
+}
+
+.user-message .message-content {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.bot-message .message-content {
+    background: white;
+    color: #333;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.message-time {
+    font-size: 10px;
+    color: #999;
+    margin-top: 4px;
+    margin-left: 12px;
+    margin-right: 12px;
+}
+
+.user-message .message-time {
+    text-align: right;
+}
+
+.chat-typing {
+    padding: 10px 15px;
+    border-top: 1px solid #e0e0e0;
+    background: white;
+}
+
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background: #28a745;
+    border-radius: 50%;
+    animation: typing 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.typing-text {
+    margin-left: 10px;
+    color: #666;
+    font-size: 12px;
+}
+
+@keyframes typing {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+}
+
+.chat-input-area {
+    padding: 15px;
+    background: white;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input-area textarea {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    resize: none;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.chat-input-area textarea:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
+}
+
+.send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #28a745;
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.send-btn:hover {
+    background: #1e7e34;
+    transform: scale(1.05);
+}
+
+@media (max-width: 576px) {
+    .chat-window {
+        width: calc(100vw - 40px);
+        right: -10px;
+        bottom: 70px;
+    }
+}
+</style>
+
+<script>
+// ========== CHECK LOGIN STATUS ==========
+function isUserLoggedIn() {
+    // Kiểm tra nhiều cách lưu thông tin đăng nhập
+    const user = localStorage.getItem('user');
+    const token = localStorage.getItem('access_token');
+    const session = sessionStorage.getItem('user');
+    
+    // Kiểm tra cookie hoặc session (có thể điều chỉnh theo cách bạn lưu)
+    return !!(user || token || session);
+}
+
+function getUserInfo() {
+    try {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            return JSON.parse(userStr);
+        }
+    } catch(e) {
+        console.error('Error parsing user data:', e);
+    }
+    return null;
+}
+
+// Hiển thị chat chỉ khi đã đăng nhập
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('📄 Trang chủ loaded - timestamp:', timestamp);
+    console.log('📄 Trang chủ loaded');
+    
+    if (isUserLoggedIn()) {
+        // User đã đăng nhập - hiển thị chat
+        const chatContainer = document.getElementById('chatContainer');
+        if (chatContainer) {
+            chatContainer.style.display = 'block';
+            console.log('✅ User đã đăng nhập - Hiển thị chat AI');
+        }
+        initChat();
+    } else {
+        // User chưa đăng nhập - không hiển thị chat
+        console.log('❌ User chưa đăng nhập - Ẩn chat AI');
+        // Có thể thêm thông báo nhẹ nhàng
+        setTimeout(() => {
+            const notice = document.createElement('div');
+            notice.className = 'position-fixed bottom-0 end-0 m-3 p-3 bg-warning text-dark rounded shadow';
+            notice.style.zIndex = '999';
+            notice.style.cursor = 'pointer';
+            notice.innerHTML = '💬 <strong>Chat AI</strong> - Đăng nhập để được tư vấn miễn phí!';
+            notice.onclick = () => {
+                $('#loginRequiredModal').modal('show');
+            };
+            document.body.appendChild(notice);
+            setTimeout(() => notice.remove(), 5000);
+        }, 2000);
+    }
+    
     loadFeaturedProducts();
 });
+
+// ========== PRODUCTS SECTION ==========
+const timestamp = new Date().getTime();
 
 async function loadFeaturedProducts() {
     console.log('🔄 Đang tải sản phẩm nổi bật...');
     
     try {
-        // SỬA: dùng /api/products
         const url = '/api/products';
         console.log('📡 Gọi API:', url);
         
@@ -104,8 +492,6 @@ async function loadFeaturedProducts() {
                 'Pragma': 'no-cache'
             }
         });
-        
-        console.log('📥 Response status:', response.status);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -136,7 +522,7 @@ async function loadFeaturedProducts() {
                          style="height: 200px; object-fit: cover;"
                          onerror="this.src='https://images.unsplash.com/photo-1619566636858-adf3ef46400b'">
                     <div class="card-body text-center">
-                        <h5 class="card-title">${p.name}</h5>
+                        <h5 class="card-title">${escapeHtml(p.name)}</h5>
                         <p class="card-text text-success fw-bold">${formatNumber(p.price)} VNĐ</p>
                         <button class="btn btn-outline-success btn-sm" onclick="addToCartFromHome(${p.id})">
                             <i class="fas fa-cart-plus"></i> Thêm vào giỏ
@@ -166,6 +552,12 @@ async function loadFeaturedProducts() {
 
 function formatNumber(num) {
     return new Intl.NumberFormat('vi-VN').format(num);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 async function addToCartFromHome(productId) {
@@ -206,5 +598,159 @@ document.getElementById('newsletterForm')?.addEventListener('submit', function(e
     alert(`Cảm ơn bạn! Email ${email} đã đăng ký thành công.`);
     this.reset();
 });
+
+// ========== CHAT AI SECTION (CHI CHO USER ĐÃ LOGIN) ==========
+let isTyping = false;
+
+// DOM elements
+const chatToggleBtn = document.getElementById('chatToggleBtn');
+const chatWindow = document.getElementById('chatWindow');
+const chatCloseBtn = document.getElementById('chatCloseBtn');
+const chatMessagesContainer = document.getElementById('chatMessages');
+const chatTyping = document.getElementById('chatTyping');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+
+function initChat() {
+    if (!chatToggleBtn) return;
+    
+    // Toggle chat window
+    chatToggleBtn.addEventListener('click', () => {
+        if (!isUserLoggedIn()) {
+            $('#loginRequiredModal').modal('show');
+            return;
+        }
+        
+        if (chatWindow.style.display === 'none' || chatWindow.style.display === '') {
+            chatWindow.style.display = 'flex';
+            chatInput.focus();
+        } else {
+            chatWindow.style.display = 'none';
+        }
+    });
+    
+    if (chatCloseBtn) {
+        chatCloseBtn.addEventListener('click', () => {
+            chatWindow.style.display = 'none';
+        });
+    }
+    
+    if (chatInput) {
+        // Auto-resize textarea
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+    }
+}
+
+// Send message function
+async function sendMessage() {
+    // Kiểm tra đăng nhập trước khi gửi tin nhắn
+    if (!isUserLoggedIn()) {
+        $('#loginRequiredModal').modal('show');
+        if (chatWindow) chatWindow.style.display = 'none';
+        return;
+    }
+    
+    const message = chatInput.value.trim();
+    if (!message || isTyping) return;
+    
+    // Clear input
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+    
+    // Add user message to UI
+    addMessageToUI(message, 'user');
+    
+    // Show typing indicator
+    showTyping();
+    isTyping = true;
+    
+    try {
+        // Gọi API AI với thông tin user
+        const userInfo = getUserInfo();
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                message: message,
+                user_id: userInfo?.id,
+                user_name: userInfo?.name
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Hide typing indicator
+        hideTyping();
+        
+        // Add bot response to UI
+        addMessageToUI(data.reply || getFallbackResponse(message), 'bot');
+        
+    } catch (error) {
+        console.error('Error:', error);
+        hideTyping();
+        addMessageToUI(getFallbackResponse(message), 'bot');
+    }
+    
+    isTyping = false;
+}
+
+// Add message to UI
+function addMessageToUI(message, sender) {
+    if (!chatMessagesContainer) return;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${sender}-message`;
+    
+    const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    
+    messageDiv.innerHTML = `
+        <div class="message-content">${escapeHtml(message)}</div>
+        <div class="message-time">${time}</div>
+    `;
+    
+    chatMessagesContainer.appendChild(messageDiv);
+    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+}
+
+// Typing indicator
+function showTyping() {
+    if (chatTyping) chatTyping.style.display = 'block';
+    if (chatMessagesContainer) chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+}
+
+function hideTyping() {
+    if (chatTyping) chatTyping.style.display = 'none';
+}
+
+// Fallback responses (khi chưa có API backend)
+function getFallbackResponse(message) {
+    const msg = message.toLowerCase();
+    
+    if (msg.includes('chào') || msg.includes('hello') || msg.includes('hi')) {
+        return 'Xin chào! Tôi là trợ lý AI của Fruit Store. Tôi có thể giúp gì cho bạn? 🍎';
+    }
+    if (msg.includes('sản phẩm') || msg.includes('trái cây') || msg.includes('bán')) {
+        return 'Fruit Store có nhiều loại trái cây tươi ngon như: táo, cam, nho, thanh long, dưa hấu, xoài, ổi... Bạn có thể xem tại trang "Mua sắm" nhé! 🛒';
+    }
+    if (msg.includes('giá') || msg.includes('bao nhiêu') || msg.includes('tiền')) {
+        return 'Giá sản phẩm dao động từ 20.000đ - 200.000đ tùy loại. Bạn có thể xem chi tiết giá tại trang sản phẩm. Có nhiều ưu đãi hấp dẫn đang chờ bạn! 💰';
+    }
+    if (msg.includes('giao hàng') || msg.includes('ship') || msg.includes('vận chuyển')) {
+        return 'Chính sách giao hàng của Fruit Store:\n✅ Giao hàng toàn quốc\n✅ Miễn phí ship đơn hàng từ 200.000đ\n✅ Thời gian: 1-3 ngày (nội thành: 2-4 giờ)\n🚚 Ship COD toàn quốc!';
+    }
+    if (msg.includes('đổi trả') || msg.includes('hoàn')) {
+        return 'Chính sách đổi trả:\n🔄 Đổi trả trong vòng 24h\n💰 Hoàn tiền 100% nếu sản phẩm lỗi\n📦 Sản phẩm không đúng mô tả\n📞 Liên hệ hotline để được hỗ trợ!';
+    }
+    if (msg.includes('cảm ơn') || msg.includes('thanks')) {
+        return 'Cảm ơn bạn! Chúc bạn một ngày tốt lành! 🌟 Hãy ghé thăm cửa hàng thường xuyên nhé!';
+    }
+    
+    return 'Cảm ơn bạn đã quan tâm đến Fruit Store! 🍎\n\nTôi có thể hỗ trợ bạn về:\n✅ Sản phẩm & giá cả\n✅ Giao hàng\n✅ Đổi trả\n✅ Khuyến mãi\n\nVui lòng hỏi cụ thể để tôi tư vấn tốt nhất! 📞';
+}
 </script>
 {% endblock %}
