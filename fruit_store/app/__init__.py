@@ -1,14 +1,14 @@
 from flask import Flask, render_template, redirect, url_for
 from flask_login import login_required, current_user
 
-from .extensions import db, login_manager
+from .extensions import db, login_manager, jwt, cors
 
 # import routes
 from .routes.auth import auth
 from .routes.product import product
 from .routes.cart import cart
 from .routes.order import order
-from .routes.admin import admin_bp  # SỬA: import admin_bp
+from .routes.admin import admin_bp
 
 from config import Config
 import os
@@ -26,6 +26,8 @@ def create_app():
     # INIT EXTENSIONS
     db.init_app(app)
     login_manager.init_app(app)
+    jwt.init_app(app)  # THÊM JWT
+    cors.init_app(app, resources={r"/api/*": {"origins": "*"}})  # THÊM CORS
 
     # Cấu hình login
     login_manager.login_view = 'auth.login_page'
@@ -42,7 +44,13 @@ def create_app():
     app.register_blueprint(product, url_prefix='/')
     app.register_blueprint(cart, url_prefix='/api')
     app.register_blueprint(order, url_prefix='/api')
-    app.register_blueprint(admin_bp, url_prefix='/api')  # SỬA: dùng admin_bp
+    app.register_blueprint(admin_bp, url_prefix='/api')  
+
+    # =========================
+    # REGISTER API BLUEPRINT (THÊM MỚI)
+    # =========================
+    from .api import api_bp
+    app.register_blueprint(api_bp)
 
     # =========================
     # UI ROUTES
@@ -61,9 +69,9 @@ def create_app():
     def cart_ui():
         return render_template('cart.html')
 
-    # =========================
+    
     # ADMIN UI ROUTES
-    # =========================
+    
     
     @app.route('/admin')
     @login_required
@@ -86,9 +94,9 @@ def create_app():
             return render_template('403.html'), 403
         return render_template('admin/users.html')
 
-    # =========================
+    
     # ERROR HANDLERS
-    # =========================
+    
     
     @app.errorhandler(403)
     def forbidden(e):
@@ -102,28 +110,28 @@ def create_app():
     def internal_server_error(e):
         return render_template('500.html', error=str(e)), 500
 
-    # =========================
+    
     # DEBUG ROUTES
-    # =========================
+    
     
     @app.route('/debug-routes')
     def debug_routes():
         import urllib
         output = ['<h2>📋 DANH SÁCH ROUTES</h2>']
         output.append('<table border="1" cellpadding="8" style="border-collapse: collapse;">')
-        output.append('入门<th>Endpoint</th><th>URL</th><th>Methods</th></tr>')
+        output.append('<tr><th>Endpoint</th><th>URL</th><th>Methods</th></tr>')
         
         for rule in sorted(app.url_map.iter_rules(), key=lambda x: str(x)):
             if not str(rule).startswith('/static'):
                 methods = ','.join(sorted(rule.methods - {'HEAD', 'OPTIONS'}))
-                output.append(f"<tr><td>{rule.endpoint}</td><td>{rule.rule}</td><td>{methods}</td></tr>")
+                output.append(f"<tr><td>{rule.endpoint}</td><td>{rule.rule}</td><td>{methods}</td>{lands}")
         
         output.append('</table>')
         return '<div style="font-family: monospace; padding:20px;">' + '\n'.join(output) + '</div>'
 
-    # =========================
+    
     # CONTEXT PROCESSOR
-    # =========================
+    
     
     @app.context_processor
     def utility_processor():
@@ -139,5 +147,10 @@ def create_app():
             current_year=datetime.now().year
         )
 
-    print("✅ App created successfully!")
+    print("="*50)
+    print("✅ FRUIT STORE APP STARTED SUCCESSFULLY!")
+    print(f"   Web app: http://localhost:5000/")
+    print(f"   API: http://localhost:5000/api/")
+    print("="*50)
+    
     return app
